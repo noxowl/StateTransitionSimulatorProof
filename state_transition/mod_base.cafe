@@ -1,0 +1,37 @@
+mod! WORKER_ID {
+    [WorkerId]
+    ops w1 w2 w3 : -> WorkerId {constr} .
+}
+
+mod! ASSEMBLY_PROCESS {
+    [AssemblyProcess]
+    ops phase1 phase2 phase3 : -> AssemblyProcess {constr} .
+}
+
+mod! MODE {
+    [Mode]
+    ops assembling engaging talking querying struggling assembled fullyAssembled : -> Mode {constr} .
+}
+
+mod! USER_COMMAND {
+    [UserCommand]
+    ops idle speak clarify exit : -> UserCommand {constr} .
+}
+
+mod! OBSERVABLE_COMPONENT {
+    pr(WORKER_ID)
+    pr(ASSEMBLY_PROCESS)
+    pr(MODE)
+    [OComp]
+    op op (worker[_]:_) : WorkerId Mode -> OComp{constr} .
+}
+
+mod! STATE {
+
+}
+
+mod! SIM_TRANS {
+    pr(STATE)
+    var W : Worker .
+    var B : Bool .
+}
