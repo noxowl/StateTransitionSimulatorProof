@@ -1,37 +1,87 @@
-mod! WORKER_ID {
-    [WorkerId]
-    ops w1 w2 w3 : -> WorkerId {constr} .
+mod! MULTISET(E :: TRIV) {
+    [Elt.E < MSet]
+    op emp : -> MSet {constr} .
+    op _ _ : MSet MSet -> MSet {constr assoc comm id: emp} .
 }
 
-mod! ASSEMBLY_PROCESS {
-    [AssemblyProcess]
-    ops phase1 phase2 phase3 : -> AssemblyProcess {constr} .
+mod! WORKER-ID {
+    pr(NAT)
+    [WorkerId]
+    op (worker:_) : Nat -> WorkerId {constr} .
+    op nilWorker : -> WorkerId .
 }
+
+open WORKER-ID .
+    red (worker: 1) .
+close
+
+mod! ASSEMBLY-PROCESS {
+    pr(NAT)
+    [AssemblyProcess] 
+    op (phase:_,sub:_) : Nat Nat -> AssemblyProcess {constr} .
+}
+
+open ASSEMBLY-PROCESS .
+    red (phase: 1,sub: 1) .
+close
 
 mod! MODE {
     [Mode]
-    ops assembling engaging talking querying struggling assembled fullyAssembled : -> Mode {constr} .
+    ops ideling assembling assemblingLocked engaging talking querying struggling assembled fullyAssembled : -> Mode {constr} .
 }
 
-mod! USER_COMMAND {
+mod! OBSERVABLE-COMPONENT principal-sort OComp {
+    pr(WORKER-ID)
+    pr(ASSEMBLY-PROCESS)
+    pr(MODE)
+
+    [OComp]
+    op _,_,_ : WorkerId AssemblyProcess Mode -> OComp {constr} .
+}
+
+open OBSERVABLE-COMPONENT .
+    red ((worker: 1), (phase: 1, sub: 1), ideling) .
+close
+
+mod! STATE {
+    pr(MULTISET(OBSERVABLE-COMPONENT) * {
+        sort MSet -> OComps
+    })
+    
+    [State]
+    op {_} : OComps -> State {constr} .
+}
+
+open STATE .
+    red {((worker: 1), (phase: 1, sub: 1), ideling) ((worker: 2), (phase: 1, sub: 1), ideling) ((worker: 3), (phase: 1, sub: 1), ideling) } .
+close
+
+mod! USER-COMMAND {
     [UserCommand]
     ops idle speak clarify exit : -> UserCommand {constr} .
 }
 
-mod! OBSERVABLE_COMPONENT {
-    pr(WORKER_ID)
-    pr(ASSEMBLY_PROCESS)
-    pr(MODE)
-    [OComp]
-    op op (worker[_]:_) : WorkerId Mode -> OComp{constr} .
+mod! TARGETED-USER-COMMAND {
+    pr(WORKER-ID)
+    pr(USER-COMMAND)
+    [TargetedUserCommand]
+    op (_,_) : WorkerId UserCommand -> TargetedUserCommand {constr} .
 }
 
-mod! STATE {
+open TARGETED-USER-COMMAND .
+    red ((worker: 1), speak) .
+    red (nilWorker, idle) .
+close
 
-}
-
-mod! SIM_TRANS {
+mod! SIM-STATE-TRANS {
     pr(STATE)
-    var W : Worker .
-    var B : Bool .
+    vars W W1 W2 W3 : WorkerId .
+
+    -- trans [asem] : {} => {}
 }
+
+
+
+
+
+
