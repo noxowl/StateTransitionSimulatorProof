@@ -4,6 +4,39 @@ mod! MULTISET(E :: TRIV) {
     op _ _ : MSet MSet -> MSet {constr assoc comm id: emp} .
 }
 
+mod! PROB principal-sort Prob {
+    pr(NAT) .
+    pr(BOOL) .
+    [Prob]
+    
+    op prob : Nat -> Prob {constr} .
+
+    op _<_ : Prob Prob -> Bool .
+    op _<=_ : Prob Prob -> Bool .
+    op _>_ : Prob Prob -> Bool .
+    op _>=_ : Prob Prob -> Bool .
+    op _==_ : Prob Prob -> Bool .
+
+    vars N M : Nat .
+
+    eq prob(N) < prob(M) = (N < M) .
+    eq prob(N) <= prob(M) = (N <= M) .
+    eq prob(N) > prob(M) = (N > M) .
+    eq prob(N) >= prob(M) = (N >= M) .
+    eq prob(N) == prob(M) = (N == M) .
+
+    op isProbInRange : Prob Prob -> Bool .
+
+    vars X Y : Nat .
+    eq isProbInRange(prob(X), prob(Y)) = ((X >= 0) and (X <= Y)) .
+}
+
+open PROB .
+    red prob(50) == prob(50) .
+    red prob(30) >= prob(70) .
+    red isProbInRange(prob(10), prob(90)) .
+close .
+
 mod! WORKER-ID {
     pr(NAT)
     [WorkerId]
@@ -77,11 +110,5 @@ mod! SIM-STATE-TRANS {
     pr(STATE)
     vars W W1 W2 W3 : WorkerId .
 
-    -- trans [asem] : {} => {}
+    -- trans [asem] : {()} => {}
 }
-
-
-
-
-
-
