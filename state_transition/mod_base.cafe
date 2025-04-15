@@ -31,12 +31,6 @@ mod! PROB principal-sort Prob {
     eq isProbInRange(prob(X), prob(Y)) = ((X >= 0) and (X <= Y)) .
 }
 
-open PROB .
-    red prob(50) == prob(50) .
-    red prob(30) >= prob(70) .
-    red isProbInRange(prob(10), prob(90)) .
-close .
-
 mod! WORKER-ID {
     pr(NAT)
     [WorkerId]
@@ -44,19 +38,11 @@ mod! WORKER-ID {
     op nilWorker : -> WorkerId .
 }
 
-open WORKER-ID .
-    red (worker: 1) .
-close
-
 mod! ASSEMBLY-PROCESS {
-    pr(NAT)
+    protecting(NAT)
     [AssemblyProcess] 
     op (phase:_,sub:_) : Nat Nat -> AssemblyProcess {constr} .
 }
-
-open ASSEMBLY-PROCESS .
-    red (phase: 1,sub: 1) .
-close
 
 mod! MODE {
     [Mode]
@@ -64,17 +50,13 @@ mod! MODE {
 }
 
 mod! OBSERVABLE-COMPONENT principal-sort OComp {
-    pr(WORKER-ID)
-    pr(ASSEMBLY-PROCESS)
-    pr(MODE)
+    protecting(WORKER-ID)
+    protecting(ASSEMBLY-PROCESS)
+    protecting(MODE)
 
     [OComp]
     op _,_,_ : WorkerId AssemblyProcess Mode -> OComp {constr} .
 }
-
-open OBSERVABLE-COMPONENT .
-    red ((worker: 1), (phase: 1, sub: 1), ideling) .
-close
 
 mod! STATE {
     pr(MULTISET(OBSERVABLE-COMPONENT) * {
@@ -84,10 +66,6 @@ mod! STATE {
     [State]
     op {_} : OComps -> State {constr} .
 }
-
-open STATE .
-    red {((worker: 1), (phase: 1, sub: 1), ideling) ((worker: 2), (phase: 1, sub: 1), ideling) ((worker: 3), (phase: 1, sub: 1), ideling) } .
-close
 
 mod! USER-COMMAND {
     [UserCommand]
@@ -101,10 +79,23 @@ mod! TARGETED-USER-COMMAND {
     op (_,_) : WorkerId UserCommand -> TargetedUserCommand {constr} .
 }
 
-open TARGETED-USER-COMMAND .
-    red ((worker: 1), speak) .
-    red (nilWorker, idle) .
-close
+mod! OCOMP-UPDATE {
+    protecting(OBSERVABLE-COMPONENT)
+    op updateOC : OComp Mode -> OComp .
+
+    var W : WorkerId .
+    var AP : AssemblyProcess .
+    vars M M1 : Mode .
+
+    eq updateOC((W, AP, M), M1) = (W, AP, M1) .
+}
+
+mod! MODE-UPDATE {
+    protecting(MODE)
+    protecting(USER-COMMAND)
+
+    op updateMode : UserCommand -> Mode .
+}
 
 mod! SIM-STATE-TRANS {
     pr(STATE)
@@ -112,3 +103,37 @@ mod! SIM-STATE-TRANS {
 
     -- trans [asem] : {()} => {}
 }
+
+-- 
+
+open PROB .
+    red prob(50) == prob(50) .
+    red prob(30) >= prob(70) .
+    red isProbInRange(prob(10), prob(90)) .
+close
+
+open WORKER-ID .
+    red (worker: 1) .
+close
+
+open ASSEMBLY-PROCESS .
+    red (phase: 1,sub: 1) .
+close
+
+open OBSERVABLE-COMPONENT .
+    red ((worker: 1), (phase: 1, sub: 1), ideling) .
+close
+
+open STATE .
+    red {((worker: 1), (phase: 1, sub: 1), ideling) ((worker: 2), (phase: 1, sub: 1), ideling) ((worker: 3), (phase: 1, sub: 1), ideling) } .
+close
+
+open TARGETED-USER-COMMAND .
+    red ((worker: 1), speak) .
+    red (nilWorker, idle) .
+close
+
+open OCOMP-UPDATE .
+    red updateOC(((worker: 1), (phase: 1, sub: 1), struggling), querying) .
+close
+
