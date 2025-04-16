@@ -44,18 +44,131 @@ mod! ASSEMBLY-PROCESS {
     op (phase:_,sub:_) : Nat Nat -> AssemblyProcess {constr} .
 }
 
-mod! MODE {
-    [Mode]
-    ops ideling assembling assemblingLocked engaging talking querying struggling assembled fullyAssembled : -> Mode {constr} .
+-- Worker Mode
+
+mod! WORKER-IDELING principal-sort WorkerIdeling {
+    [WorkerIdeling]
+    op ideling : -> WorkerIdeling {constr} .
 }
+
+mod! WORKER-ASSEMBLING principal-sort WorkerAssembling {
+    [WorkerAssembling]
+    op assembling : -> WorkerAssembling {constr} .
+}
+
+mod! WORKER-ASSEMBLING-LOCKED principal-sort WorkerAssemblingLocked {
+    [WorkerAssemblingLocked]
+    op assemblingLocked : -> WorkerAssemblingLocked {constr} .
+}
+
+mod! WORKER-ENGAGING principal-sort WorkerEngaging {
+    [WorkerEngaging]
+    op engaging : -> WorkerEngaging {constr} .
+}
+
+mod! WORKER-TALKING principal-sort WorkerTalking {
+    [WorkerTalking]
+    op talking : -> WorkerTalking {constr} .
+}
+
+mod! WORKER-QUERYING principal-sort WorkerQuerying {
+    [WorkerQuerying]
+    op querying : -> WorkerQuerying {constr} .
+}
+
+mod! WORKER-STRUGGLING principal-sort WorkerStruggling {
+    [WorkerStruggling]
+    op struggling : -> WorkerStruggling {constr} .
+}
+
+mod! WORKER-ASSEMBLED principal-sort WorkerAssembled {
+    [WorkerAssembled]
+    op assembled : -> WorkerAssembled {constr} .
+}
+
+mod! WORKER-FULLY-ASSEMBLED principal-sort WorkerFullyAssembled {
+    [WorkerFullyAssembled]
+    op fullyAssembled : -> WorkerFullyAssembled {constr} .
+}
+
+mod! WORKER-ERROR principal-sort WorkerError {
+    [WorkerError]
+    op workerError : -> WorkerError {constr} .
+}
+
+mod! WORKER-MODE principal-sort WorkerMode {
+    protecting(WORKER-IDELING)
+    protecting(WORKER-ASSEMBLING)
+    protecting(WORKER-ASSEMBLING-LOCKED)
+    protecting(WORKER-ENGAGING)
+    protecting(WORKER-TALKING)
+    protecting(WORKER-QUERYING)
+    protecting(WORKER-STRUGGLING)
+    protecting(WORKER-ASSEMBLED)
+    protecting(WORKER-FULLY-ASSEMBLED)
+    protecting(WORKER-ERROR)
+
+    [WorkerIdeling WorkerAssembling WorkerAssemblingLocked WorkerEngaging WorkerTalking WorkerQuerying WorkerStruggling WorkerAssembled WorkerFullyAssembled WorkerError < WorkerMode]
+
+    -- op transition(_,_) : WorkerMode WorkerMode -> WorkerMode .
+    -- op permittedTransition(_,_) : WorkerMode WorkerMode -> Bool .
+
+    vars WMS WMD : WorkerMode .
+    var WI : WorkerIdeling .
+    var WAG : WorkerAssembling .
+    var WAL : WorkerAssemblingLocked .
+    var WE : WorkerEngaging .
+    var WT : WorkerTalking .
+    var WQ : WorkerQuerying .
+    var WS : WorkerStruggling .
+    var WAD : WorkerAssembled .
+    var WAF : WorkerFullyAssembled .
+    var WErr : WorkerError .
+
+    -- ceq transition(WMS, WMD) = WErr if not(permittedTransition(WMS, WMD)) .
+    -- eq permittedTransition(WI, WAG) = true .
+}
+
+-- User Command
+
+mod! USER-COMMAND-IDLE principal-sort UserIdle {
+    [UserIdle]
+    op idle : -> UserIdle {constr} .
+}
+
+mod! USER-COMMAND-SPEAK principal-sort UserSpeak {
+    [UserSpeak]
+    op speak : -> UserSpeak {constr} .
+}
+
+mod! USER-COMMAND-CLARIFY principal-sort UserClarify {
+    [UserClarify]
+    op clarify : -> UserClarify {constr} .
+}
+
+mod! USER-COMMAND-EXIT principal-sort UserExit {
+    [UserExit]
+    op exit : -> UserExit {constr} .
+}
+
+mod! USER-COMMAND principal-sort UserCommand {
+    protecting(USER-COMMAND-IDLE)
+    protecting(USER-COMMAND-SPEAK)
+    protecting(USER-COMMAND-CLARIFY)
+    protecting(USER-COMMAND-EXIT)
+
+    [UserIdle UserSpeak UserClarify UserExit < UserCommand]
+}
+
+-- observable
 
 mod! OBSERVABLE-COMPONENT principal-sort OComp {
     protecting(WORKER-ID)
     protecting(ASSEMBLY-PROCESS)
-    protecting(MODE)
+    protecting(WORKER-MODE)
 
     [OComp]
-    op _,_,_ : WorkerId AssemblyProcess Mode -> OComp {constr} .
+    op _,_,_ : WorkerId AssemblyProcess WorkerMode -> OComp {constr} .
 }
 
 mod! STATE {
@@ -67,11 +180,6 @@ mod! STATE {
     op {_} : OComps -> State {constr} .
 }
 
-mod! USER-COMMAND {
-    [UserCommand]
-    ops idle speak clarify exit : -> UserCommand {constr} .
-}
-
 mod! TARGETED-USER-COMMAND {
     pr(WORKER-ID)
     pr(USER-COMMAND)
@@ -81,20 +189,35 @@ mod! TARGETED-USER-COMMAND {
 
 mod! OCOMP-UPDATE {
     protecting(OBSERVABLE-COMPONENT)
-    op updateOC : OComp Mode -> OComp .
+    op updateOC : OComp WorkerMode -> OComp .
 
     var W : WorkerId .
     var AP : AssemblyProcess .
-    vars M M1 : Mode .
+    vars M M1 : WorkerMode .
 
     eq updateOC((W, AP, M), M1) = (W, AP, M1) .
 }
 
+mod! MODE-TRANS-RULE {
+    protecting(BOOL)
+    protecting(WORKER-MODE)
+
+}
+
 mod! MODE-UPDATE {
-    protecting(MODE)
+    protecting(WORKER-MODE)
     protecting(USER-COMMAND)
 
-    op updateMode : UserCommand -> Mode .
+    op updateMode : UserCommand -> WorkerMode .
+
+    var UC : UserCommand .
+    var M : WorkerMode .
+    var MI : WorkerIdeling .
+    var MA : WorkerAssembling .
+    var MAL : WorkerAssemblingLocked .
+
+    eq updateMode(UC) = M .
+    -- eq updateMode()
 }
 
 mod! SIM-STATE-TRANS {
@@ -104,7 +227,7 @@ mod! SIM-STATE-TRANS {
     -- trans [asem] : {()} => {}
 }
 
--- 
+-- verify
 
 open PROB .
     red prob(50) == prob(50) .
